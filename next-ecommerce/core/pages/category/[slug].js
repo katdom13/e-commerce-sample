@@ -1,5 +1,5 @@
 import { makeStyles } from "@material-ui/core/styles"
-import Header from "../components/header"
+import Header from "../../components/header"
 import axios from 'axios'
 import Link from 'next/link'
 import Grid from '@material-ui/core/Grid'
@@ -9,6 +9,7 @@ import CardMedia from '@material-ui/core/CardMedia'
 import CardContent from '@material-ui/core/CardContent'
 import Typography from '@material-ui/core/Typography'
 import Box from '@material-ui/core/Box'
+import { useRouter } from 'next/router'
 
 const useStyles = makeStyles((theme) => ({
   example: {
@@ -23,9 +24,15 @@ const useStyles = makeStyles((theme) => ({
   }
 }))
 
-export default function Home({ data, categories }) {
+export default function Category({ data, categories }) {
 
   const classes = useStyles()
+  const router = useRouter()
+
+  // fallback, wait for data not defined in static paths
+  if (router.isFallback) {
+    return <div>Loading...</div>
+  }
 
   return (
     <>
@@ -66,13 +73,20 @@ export default function Home({ data, categories }) {
 
 export async function getStaticProps(context) {
 
-  const products = await axios.get("http://127.0.0.1:8000/api/")
+  const category = await axios.get(`http://127.0.0.1:8000/api/category/${context.params.slug}`)
   const categories = await axios.get("http://127.0.0.1:8000/api/category/")
 
   return {
     props: {
-      data: products.data,
-      categories: categories.data,
+      data: category.data,
+      categories: categories.data
     }, // will be passed to the page component as props
+  }
+}
+
+export async function getStaticPaths() {
+  return {
+    paths: [ { params: { slug: "boots" } } ],
+    fallback: true, //load first
   }
 }
